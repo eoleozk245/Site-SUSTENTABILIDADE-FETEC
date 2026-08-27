@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sustentabilidade &amp; Tecnologia · Projetos da 1ª Info</title>
+  <meta name="description" content="Vitrine dos projetos de sustentabilidade e tecnologia desenvolvidos pela 1ª Informática para Internet." />
+
+  <!-- Fontes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- Ícones Lucide -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Fundo animado (gradiente mesh + partículas) -->
+  <div class="bg-layer" aria-hidden="true">
+    <div class="bg-mesh"></div>
+    <div class="bg-blob bg-blob--1"></div>
+    <div class="bg-blob bg-blob--2"></div>
+    <div class="bg-blob bg-blob--3"></div>
+    <canvas class="bg-particles" id="particles"></canvas>
+  </div>
+
+  <!-- HEADER -->
+  <header class="header" id="header">
+    <div class="header__inner">
+      <a href="#top" class="brand">
+        <span class="brand__mark" aria-hidden="true">
+          <i data-lucide="leaf"></i>
+        </span>
+        <span class="brand__text">
+          Sustentabilidade <span class="brand__amp">&amp;</span> Tecnologia
+        </span>
+      </a>
+
+      <div class="search">
+        <i data-lucide="search" class="search__icon"></i>
+        <input
+          type="search"
+          id="searchInput"
+          class="search__input"
+          placeholder="Buscar projetos..."
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <kbd class="search__kbd">/</kbd>
+      </div>
+
+      <nav class="nav" aria-label="Categorias">
+        <a href="#reciclagem" class="nav__link" data-nav="reciclagem" title="Reciclagem"><i data-lucide="recycle"></i></a>
+        <a href="#agua" class="nav__link" data-nav="agua" title="Água e Oceano"><i data-lucide="waves"></i></a>
+        <a href="#cidades" class="nav__link" data-nav="cidades" title="Cidades Inteligentes"><i data-lucide="building-2"></i></a>
+        <a href="#tecnologia" class="nav__link" data-nav="tecnologia" title="Tecnologia"><i data-lucide="cpu"></i></a>
+        <a href="#agro" class="nav__link" data-nav="agro" title="Agricultura"><i data-lucide="sprout"></i></a>
+      </nav>
+
+      <div class="header__actions">
+        <button class="icon-btn" id="favoritesBtn" aria-label="Ver favoritos" title="Favoritos">
+          <i data-lucide="heart"></i>
+          <span class="icon-btn__badge" id="favCount" hidden>0</span>
+        </button>
+        <button class="icon-btn" id="themeBtn" aria-label="Alternar tema" title="Alternar tema claro/escuro">
+          <i data-lucide="sun" class="icon-sun"></i>
+          <i data-lucide="moon" class="icon-moon"></i>
+        </button>
+        <button class="icon-btn icon-btn--menu" id="menuBtn" aria-label="Abrir menu" aria-expanded="false">
+          <i data-lucide="menu"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Menu mobile (dropdown) -->
+    <div class="mobile-menu" id="mobileMenu" hidden>
+      <a href="#reciclagem" class="mobile-menu__link"><i data-lucide="recycle"></i> Reciclagem</a>
+      <a href="#agua" class="mobile-menu__link"><i data-lucide="waves"></i> Água e Oceano</a>
+      <a href="#cidades" class="mobile-menu__link"><i data-lucide="building-2"></i> Cidades</a>
+      <a href="#tecnologia" class="mobile-menu__link"><i data-lucide="cpu"></i> Tecnologia</a>
+      <a href="#agro" class="mobile-menu__link"><i data-lucide="sprout"></i> Agricultura</a>
+    </div>
+  </header>
+
+  <main id="top">
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero__eyebrow">
+        <span class="dot"></span>
+        <span>Vitrine da turma · 2026</span>
+      </div>
+
+      <h1 class="hero__title">
+        Sustentabilidade
+        <span class="hero__amp">&amp;</span>
+        <span class="hero__gradient">Tecnologia</span>
+      </h1>
+
+      <p class="hero__lede">
+        Uma coletânea dos projetos desenvolvidos pela
+        <strong>1ª Informática para Internet</strong> — cada card leva a um site
+        criado por um colega, unindo código e cuidado com o planeta.
+      </p>
+
+      <div class="hero__stats">
+        <div class="stat">
+          <span class="stat__num" data-count="14">0</span>
+          <span class="stat__label">projetos</span>
+        </div>
+        <span class="stat__sep" aria-hidden="true"></span>
+        <div class="stat">
+          <span class="stat__num" data-count="5">0</span>
+          <span class="stat__label">categorias</span>
+        </div>
+        <span class="stat__sep" aria-hidden="true"></span>
+        <div class="stat">
+          <span class="stat__num" data-count="1">0</span>
+          <span class="stat__label">turma</span>
+        </div>
+      </div>
+
+      <a href="#reciclagem" class="hero__scroll" aria-label="Ir para os projetos">
+        <span>Explorar projetos</span>
+        <i data-lucide="arrow-down"></i>
+      </a>
+    </section>
+
+    <!-- Estado da busca -->
+    <div class="search-status" id="searchStatus" hidden>
+      <span id="searchStatusText"></span>
+      <button class="btn-ghost" id="clearSearch">
+        <i data-lucide="x"></i> Limpar
+      </button>
+    </div>
+
+    <!-- Container onde as seções são injetadas via JS -->
+    <div id="sectionsContainer"></div>
+
+    <!-- Estado vazio (sem resultados) -->
+    <div class="empty-state" id="emptyState" hidden>
+      <div class="empty-state__icon"><i data-lucide="search-x"></i></div>
+      <h3>Nenhum projeto encontrado</h3>
+      <p>Tente uma busca diferente ou limpe o filtro.</p>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer__inner">
+      <div class="footer__brand">
+        <span class="brand__mark" aria-hidden="true">
+          <i data-lucide="leaf"></i>
+        </span>
+        <span>Sustentabilidade &amp; Tecnologia</span>
+      </div>
+      <div class="footer__credit">
+        <p>Desenvolvido por: <strong>Leonardo de Campos Silva Machado</strong></p>
+        <p class="footer__sub">1ª Informática para Internet · 2026</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MODAL de detalhes -->
+  <div class="modal" id="modal" hidden aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__panel" role="document">
+      <button class="modal__close" aria-label="Fechar" data-close>
+        <i data-lucide="x"></i>
+      </button>
+      <div class="modal__cover" id="modalCover"></div>
+      <div class="modal__body">
+        <div class="modal__badge" id="modalBadge"></div>
+        <h2 class="modal__title" id="modalTitle"></h2>
+        <p class="modal__desc" id="modalDesc"></p>
+        <div class="modal__meta" id="modalMeta"></div>
+        <div class="modal__actions">
+          <a class="btn btn--primary" id="modalLink" target="_blank" rel="noopener">
+            Acessar projeto <i data-lucide="arrow-up-right"></i>
+          </a>
+          <button class="btn btn--ghost" id="modalFav">
+            <i data-lucide="heart"></i> <span>Favoritar</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js" defer></script>
+</body>
+</html>
