@@ -676,6 +676,47 @@ function initParticles() {
 }
 
 /* =========================================================
+   13) BOLA DE LUZ QUE SEGUE O CURSOR
+   ========================================================= */
+function initCursorGlow() {
+  const glow = $("#cursorGlow");
+  if (!glow) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (window.matchMedia("(hover: none), (pointer: coarse)").matches) return;
+
+  let targetX = 0, targetY = 0;
+  let currentX = 0, currentY = 0;
+  let active = false;
+  let raf = null;
+
+  const tick = () => {
+    // suaviza o movimento (lerp) para um rastro suave
+    currentX += (targetX - currentX) * 0.18;
+    currentY += (targetY - currentY) * 0.18;
+    glow.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+    raf = requestAnimationFrame(tick);
+  };
+
+  window.addEventListener("mousemove", (e) => {
+    targetX = e.clientX;
+    targetY = e.clientY;
+    if (!active) {
+      active = true;
+      currentX = targetX;
+      currentY = targetY;
+      glow.classList.add("is-active");
+      raf = requestAnimationFrame(tick);
+    }
+  }, { passive: true });
+
+  window.addEventListener("mouseleave", () => {
+    active = false;
+    glow.classList.remove("is-active");
+    if (raf) cancelAnimationFrame(raf);
+  });
+}
+
+/* =========================================================
    INIT
    ========================================================= */
 document.addEventListener("DOMContentLoaded", () => {
@@ -695,6 +736,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initHeader();
   initReveal();
   initParticles();
+  initCursorGlow();
 
   // contador anima quando o hero está visível
   const heroObs = new IntersectionObserver((entries) => {
