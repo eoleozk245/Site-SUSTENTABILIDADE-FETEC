@@ -11,13 +11,23 @@
   <!-- Favicon (folha inline, sem depender de arquivo externo) -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2322D3EE' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 20A7 7 0 0 1 4 13H2a10 10 0 0 0 10 10 10 10 0 0 0 10-10c0-4.42-2.87-8.17-6.84-9.5A9.98 9.98 0 0 0 11 20Z'/%3E%3Cpath d='M11 20a7 7 0 0 1 7-7V6a10.02 10.02 0 0 0-6.84 3.5'/%3E%3C/svg%3E" />
 
-  <!-- Compartilhamento (Open Graph / Twitter Card) -->
+  <!-- Compartilhamento (Open Graph / Twitter Card)
+       Se publicar em outro endereço, troque a URL base abaixo. -->
+  <link rel="canonical" href="https://eoleozk245.github.io/Site-SUSTENTABILIDADE-FETEC/" />
   <meta property="og:type" content="website" />
+  <meta property="og:locale" content="pt_BR" />
+  <meta property="og:site_name" content="Sustentabilidade & Tecnologia" />
+  <meta property="og:url" content="https://eoleozk245.github.io/Site-SUSTENTABILIDADE-FETEC/" />
   <meta property="og:title" content="Sustentabilidade & Tecnologia · Projetos da 1ª Info" />
   <meta property="og:description" content="Vitrine dos projetos de sustentabilidade e tecnologia desenvolvidos pela 1ª Informática para Internet." />
-  <meta name="twitter:card" content="summary" />
+  <meta property="og:image" content="https://eoleozk245.github.io/Site-SUSTENTABILIDADE-FETEC/imagens/og-preview.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Sustentabilidade & Tecnologia — vitrine com 14 projetos da 1ª Informática para Internet." />
+  <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Sustentabilidade & Tecnologia · Projetos da 1ª Info" />
   <meta name="twitter:description" content="Vitrine dos projetos de sustentabilidade e tecnologia desenvolvidos pela 1ª Informática para Internet." />
+  <meta name="twitter:image" content="https://eoleozk245.github.io/Site-SUSTENTABILIDADE-FETEC/imagens/og-preview.jpg" />
 
   <!-- Fontes -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -92,7 +102,8 @@
           <i data-lucide="sun" class="icon-sun"></i>
           <i data-lucide="moon" class="icon-moon"></i>
         </button>
-        <button class="icon-btn icon-btn--menu" id="menuBtn" aria-label="Abrir menu" aria-expanded="false">
+        <button class="icon-btn icon-btn--menu" id="menuBtn" aria-label="Abrir menu"
+                aria-expanded="false" aria-controls="mobileMenu">
           <i data-lucide="menu"></i>
         </button>
       </div>
@@ -129,14 +140,16 @@
         criado por um colega, unindo código e cuidado com o planeta.
       </p>
 
+      <!-- os números são preenchidos pelo JS a partir dos dados, para nunca
+           desatualizarem quando um projeto novo for adicionado -->
       <div class="hero__stats">
         <div class="stat">
-          <span class="stat__num" data-count="14">0</span>
+          <span class="stat__num" data-count-from="sites">0</span>
           <span class="stat__label">projetos</span>
         </div>
         <span class="stat__sep" aria-hidden="true"></span>
         <div class="stat">
-          <span class="stat__num" data-count="5">0</span>
+          <span class="stat__num" data-count-from="categorias">0</span>
           <span class="stat__label">categorias</span>
         </div>
         <span class="stat__sep" aria-hidden="true"></span>

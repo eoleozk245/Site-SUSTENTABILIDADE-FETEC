@@ -124,6 +124,9 @@ a { color: inherit; text-decoration: none; }
 button { font: inherit; background: none; border: none; color: inherit; cursor: pointer; }
 img { max-width: 100%; display: block; }
 
+/* rede de segurança: palavras longas (comuns em português) nunca vazam o container */
+h1, h2, h3, p, a, span { overflow-wrap: break-word; }
+
 ::selection {
   background: var(--accent);
   color: var(--bg);
@@ -659,10 +662,13 @@ svg[data-lucide], .lucide {
 .hero__title {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(2.5rem, 8vw, 5.5rem);
-  line-height: 1.02;
+  /* mínimo menor + quebra segura: "Sustentabilidade" é longa e vazava em telas de 375px */
+  font-size: clamp(1.9rem, 7.5vw, 5.5rem);
+  line-height: 1.05;
   letter-spacing: -0.035em;
   margin-bottom: 28px;
+  overflow-wrap: break-word;
+  hyphens: auto;
   animation: fadeUp 1000ms var(--ease-apple) 100ms both;
 }
 
@@ -950,6 +956,25 @@ svg[data-lucide], .lucide {
   transition: transform 800ms ease;
 }
 .card:hover .card__cover img { transform: scale(1.06); }
+
+/* selo "visitado" — aparece nos projetos que você já abriu */
+.card__visited {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(10px);
+  color: white;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  z-index: 3;
+  animation: fadeIn 300ms ease both;
+}
+[data-theme="light"] .card__visited { background: rgba(11, 30, 62, 0.7); }
 
 /* capa placeholder (quando ainda não há imagem) */
 .card__cover--placeholder {

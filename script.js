@@ -255,7 +255,7 @@ function renderSection(cat) {
             </div>
           </div>
         </div>
-        <span class="section__count">${total} projeto${total > 1 ? "s" : ""}</span>
+        <span class="section__count" data-total="${total}">${total} projeto${total !== 1 ? "s" : ""}</span>
       </div>
       <div class="grid" data-grid="${cat.id}">
         ${cards}
@@ -264,10 +264,27 @@ function renderSection(cat) {
   `;
 }
 
+/* fallback quando a imagem de capa não carrega: mostra o ícone da categoria */
+function handleCoverError(img, icone) {
+  const cover = img.closest(".card__cover");
+  if (!cover) return;
+  cover.classList.remove("is-loading");
+  cover.classList.add("card__cover--placeholder");
+  img.remove();
+  const icon = document.createElement("i");
+  icon.setAttribute("data-lucide", icone);
+  icon.className = "card__cover-icon";
+  cover.prepend(icon);
+  if (window.lucide) window.lucide.createIcons();
+}
+
 function renderCard(site, cat) {
+  // onerror: se a capa falhar, cai no ícone da categoria em vez de ficar
+  // com o skeleton girando para sempre
   const cover = site.imagem
-    ? `<img src="${escapeHtml(site.imagem)}" alt="Capa do ${escapeHtml(site.nome)}" loading="lazy"
-         onload="this.closest('.card__cover').classList.remove('is-loading')" />`
+    ? `<img src="${escapeHtml(site.imagem)}" alt="Capa do site ${escapeHtml(site.nome)}" loading="lazy" decoding="async"
+         onload="this.closest('.card__cover').classList.remove('is-loading')"
+         onerror="handleCoverError(this, '${escapeHtml(cat.icone)}')" />`
     : `<i data-lucide="${cat.icone}" class="card__cover-icon"></i>`;
 
   const coverClass = site.imagem ? "card__cover is-loading" : "card__cover card__cover--placeholder";
@@ -437,13 +454,35 @@ function pushRecent(id) {
   const filtered = list.filter((x) => x !== id);
   filtered.unshift(id);
   storage.set(RECENT_KEY, filtered.slice(0, RECENT_MAX));
+  refreshRecentUI();
+}
+
+/* marca visualmente os projetos que você já abriu */
+function refreshRecentUI() {
+  const recent = new Set(storage.get(RECENT_KEY, []));
+  $$(".card").forEach((card) => {
+    const visited = recent.has(card.dataset.id);
+    card.classList.toggle("is-visited", visited);
+    let tag = $(".card__visited", card);
+    if (visited && !tag) {
+      tag = document.createElement("span");
+      tag.className = "card__visited";
+      tag.textContent = "Visitado";
+      $(".card__cover", card)?.appendChild(tag);
+    } else if (!visited && tag) {
+      tag.remove();
+    }
+  });
 }
 
 function initRecent() {
+  // captura: o link "Acessar" chama stopPropagation() para não abrir o modal,
+  // o que impedia este listener de rodar na fase de bolha
   document.addEventListener("click", (e) => {
     const link = e.target.closest("[data-visit]");
     if (link) pushRecent(link.dataset.visit);
-  });
+  }, { capture: true });
+  refreshRecentUI();
 }
 
 /* =========================================================
@@ -482,6 +521,14 @@ function filterCards({ query = "", favoritesOnly = false } = {}) {
       animateCardVisibility(card, show);
       if (show) visibleInSection++;
     });
+
+    // o contador da seção acompanha o filtro ativo
+    const countEl = $(".section__count", section);
+    if (countEl) {
+      const filtering = !!q || favoritesOnly;
+      const shown = filtering ? visibleInSection : Number(countEl.dataset.total);
+      countEl.textContent = `${shown} projeto${shown !== 1 ? "s" : ""}`;
+    }
 
     section.classList.toggle("is-hidden", visibleInSection === 0);
     totalVisible += visibleInSection;
@@ -722,9 +769,24 @@ function initModal() {
 /* =========================================================
   10) CONTADOR ANIMADO + REVEAL ON SCROLL
    ========================================================= */
+/* preenche os contadores do hero a partir dos dados reais (nunca desatualiza) */
+function syncCounters() {
+  const fontes = {
+    sites: SITES.length,
+    categorias: CATEGORIAS.length,
+  };
+  $$(".stat__num").forEach((el) => {
+    const fonte = el.dataset.countFrom;
+    if (fonte && fonte in fontes) el.dataset.count = fontes[fonte];
+    // já mostra o valor final: se a animação não rodar, o número certo aparece
+    el.textContent = el.dataset.count ?? el.textContent;
+  });
+}
+
 function animateCounters() {
   $$(".stat__num").forEach((el) => {
     const target = parseInt(el.dataset.count, 10);
+    if (Number.isNaN(target)) return;
     const duration = 1200;
     const start = performance.now();
     const step = (now) => {
@@ -780,18 +842,34 @@ function initHeader() {
 
   const menuBtn = $("#menuBtn");
   const menu    = $("#mobileMenu");
-  menuBtn.addEventListener("click", () => {
-    const open = menu.hidden;
+
+  const setMenu = (open) => {
     menu.hidden = !open;
     menuBtn.setAttribute("aria-expanded", String(open));
-  });
+    menuBtn.setAttribute("aria-label", open ? "Fechar menu" : "Abrir menu");
+  };
+
+  menuBtn.addEventListener("click", () => setMenu(menu.hidden));
+
   // fechar menu ao clicar num link
   $$(".mobile-menu__link").forEach((l) =>
-    l.addEventListener("click", () => {
-      menu.hidden = true;
-      menuBtn.setAttribute("aria-expanded", "false");
-    })
+    l.addEventListener("click", () => setMenu(false))
   );
+
+  // fechar ao clicar fora do menu
+  document.addEventListener("click", (e) => {
+    if (menu.hidden) return;
+    if (e.target.closest("#mobileMenu") || e.target.closest("#menuBtn")) return;
+    setMenu(false);
+  });
+
+  // fechar com Escape (e devolver o foco ao botão)
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !menu.hidden) {
+      setMenu(false);
+      menuBtn.focus();
+    }
+  });
 }
 
 /* botão flutuante "voltar ao topo" */
@@ -878,14 +956,27 @@ function initParticles() {
 function initCardSpotlight() {
   const container = $("#sectionsContainer");
   if (!container) return;
+  if (window.matchMedia("(hover: none), (pointer: coarse)").matches) return;
 
+  let pending = null;
+  let scheduled = false;
+
+  // agrupa as atualizações num único frame para não escrever estilo a cada mousemove
   container.addEventListener("mousemove", (e) => {
     const card = e.target.closest(".card");
     if (!card) return;
-    const rect = card.getBoundingClientRect();
-    card.style.setProperty("--mx", `${e.clientX - rect.left}px`);
-    card.style.setProperty("--my", `${e.clientY - rect.top}px`);
-  });
+    pending = { card, x: e.clientX, y: e.clientY };
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(() => {
+      scheduled = false;
+      if (!pending) return;
+      const rect = pending.card.getBoundingClientRect();
+      pending.card.style.setProperty("--mx", `${pending.x - rect.left}px`);
+      pending.card.style.setProperty("--my", `${pending.y - rect.top}px`);
+      pending = null;
+    });
+  }, { passive: true });
 }
 
 /* =========================================================
@@ -1014,6 +1105,7 @@ function initCursorGlow() {
    ========================================================= */
 document.addEventListener("DOMContentLoaded", () => {
   initTheme();
+  syncCounters();
   renderAll();
 
   // renderizar ícones lucide após primeiro render
