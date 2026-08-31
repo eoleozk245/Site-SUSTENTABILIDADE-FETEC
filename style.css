@@ -224,6 +224,30 @@ svg[data-lucide], .lucide {
   opacity: 0.6;
 }
 
+/* bola de luz suave que segue o cursor */
+.cursor-glow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 380px;
+  height: 380px;
+  margin: -190px 0 0 -190px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0;
+  transition: opacity 300ms ease;
+  transform: translate3d(-999px, -999px, 0);
+  will-change: transform;
+}
+.cursor-glow.is-active { opacity: 1; }
+
+@media (hover: none), (pointer: coarse) {
+  .cursor-glow { display: none; }
+}
+
 /* 4) HEADER ------------------------------------------------ */
 .header {
   position: sticky;
