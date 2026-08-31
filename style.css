@@ -135,6 +135,18 @@ img { max-width: 100%; display: block; }
   border-radius: 4px;
 }
 
+/* Scrollbar customizada, consistente com o tema */
+html { scrollbar-width: thin; scrollbar-color: var(--glass-border-2) transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--glass-border-2);
+  border-radius: 999px;
+  border: 2px solid var(--bg);
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--accent); background-clip: padding-box; }
+
 /* Garantia: qualquer elemento com [hidden] fica realmente escondido,
    mesmo que sua classe defina um display explícito (flex/grid/etc). */
 [hidden] { display: none !important; }
@@ -247,6 +259,39 @@ svg[data-lucide], .lucide {
   0%   { transform: translate(-50%, -50%) translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
   100% { transform: translate(-50%, -50%) translate(var(--dx), var(--dy)) rotate(220deg) scale(0.3); opacity: 0; }
 }
+
+/* botão voltar ao topo */
+.back-to-top {
+  position: fixed;
+  right: clamp(16px, 3vw, 32px);
+  bottom: clamp(16px, 3vw, 32px);
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(16px);
+  color: var(--text-dim);
+  box-shadow: var(--shadow-card);
+  z-index: 60;
+  opacity: 0;
+  transform: translateY(16px) scale(0.9);
+  transition: opacity 300ms var(--ease-apple), transform 300ms var(--ease-apple),
+              color var(--transition-fast), border-color var(--transition-fast);
+  pointer-events: none;
+}
+.back-to-top.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+.back-to-top:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.back-to-top:active { transform: scale(0.9); }
 
 /* bola de luz suave que segue o cursor */
 .cursor-glow {
@@ -1079,6 +1124,7 @@ svg[data-lucide], .lucide {
   padding: 60px var(--gutter);
   text-align: center;
   color: var(--text-dim);
+  animation: fadeUp 500ms var(--ease-apple) both;
 }
 .empty-state__icon {
   width: 72px; height: 72px;
@@ -1088,6 +1134,13 @@ svg[data-lucide], .lucide {
   background: var(--glass);
   border: 1px solid var(--glass-border);
   color: var(--text-muted);
+  animation: emptyIconShake 600ms var(--ease-out-back) 150ms both;
+}
+@keyframes emptyIconShake {
+  0%   { transform: scale(0.6) rotate(0deg); opacity: 0; }
+  50%  { transform: scale(1.05) rotate(-8deg); opacity: 1; }
+  75%  { transform: scale(1) rotate(6deg); }
+  100% { transform: scale(1) rotate(0deg); }
 }
 .empty-state__icon svg { width: 32px; height: 32px; }
 .empty-state h3 {
@@ -1403,4 +1456,13 @@ svg[data-lucide], .lucide {
   }
   .card, .section__header { opacity: 1; transform: none; filter: none; }
   .bg-blob, .hero__amp, .dot, .hero__scroll svg { animation: none !important; }
+}
+
+/* Impressão: remove decorações e efeitos, mantém só o conteúdo legível */
+@media print {
+  .bg-layer, .cursor-glow, .cursor-dot, .back-to-top, .header, .modal,
+  .search-status, .hero__scroll, .confetti-particle { display: none !important; }
+  body { background: white; color: black; }
+  .card { break-inside: avoid; box-shadow: none; border: 1px solid #ccc; }
+  a::after { content: " (" attr(href) ")"; font-size: 11px; color: #555; }
 }
