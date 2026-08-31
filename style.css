@@ -707,11 +707,6 @@ svg[data-lucide], .lucide {
   transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
   cursor: pointer;
   isolation: isolate;
-  transform-style: preserve-3d;
-  will-change: transform;
-}
-.card.is-tilting {
-  transition: box-shadow var(--transition), border-color var(--transition);
 }
 
 /* borda animada (brilho no hover) */

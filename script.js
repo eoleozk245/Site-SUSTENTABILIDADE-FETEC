@@ -682,41 +682,6 @@ function initParticles() {
 }
 
 /* =========================================================
-   13) TILT 3D NOS CARDS (segue o cursor)
-   ========================================================= */
-function initCardTilt() {
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  if (window.matchMedia("(hover: none), (pointer: coarse)").matches) return;
-
-  const container = $("#sectionsContainer");
-  if (!container) return;
-
-  const MAX_TILT = 8; // graus
-
-  container.addEventListener("mousemove", (e) => {
-    const card = e.target.closest(".card");
-    if (!card) return;
-    const rect = card.getBoundingClientRect();
-    const px = (e.clientX - rect.left) / rect.width;  // 0..1
-    const py = (e.clientY - rect.top) / rect.height;  // 0..1
-    const rotateY = (px - 0.5) * MAX_TILT * 2;
-    const rotateX = (0.5 - py) * MAX_TILT * 2;
-
-    card.classList.add("is-tilting");
-    card.style.transform =
-      `perspective(900px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-6px) scale(1.015)`;
-  });
-
-  container.addEventListener("mouseout", (e) => {
-    const card = e.target.closest(".card");
-    if (!card) return;
-    if (card.contains(e.relatedTarget)) return;
-    card.classList.remove("is-tilting");
-    card.style.transform = "";
-  });
-}
-
-/* =========================================================
    14) BOTÃO MAGNÉTICO (hero CTA)
    ========================================================= */
 function initMagneticButton() {
@@ -804,7 +769,6 @@ document.addEventListener("DOMContentLoaded", () => {
   initReveal();
   initParticles();
   initCursorGlow();
-  initCardTilt();
   initMagneticButton();
 
   // contador anima quando o hero está visível
