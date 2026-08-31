@@ -660,6 +660,18 @@ function initReveal() {
   }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
 
   cards.forEach((c) => observer.observe(c));
+
+  const headers = $$(".section__header");
+  const headerObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("is-visible");
+        headerObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.2, rootMargin: "0px 0px -40px 0px" });
+
+  headers.forEach((h) => headerObserver.observe(h));
 }
 
 /* =========================================================
@@ -782,7 +794,28 @@ function initParallax() {
 }
 
 /* =========================================================
-   15) BOTÃO MAGNÉTICO (hero CTA)
+   15) RIPPLE NOS BOTÕES
+   ========================================================= */
+function initRipple() {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest(".btn");
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height) * 1.4;
+    const ripple = document.createElement("span");
+    ripple.className = "btn__ripple";
+    ripple.style.width = ripple.style.height = `${size}px`;
+    ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
+    ripple.style.top  = `${e.clientY - rect.top - size / 2}px`;
+    btn.appendChild(ripple);
+    ripple.addEventListener("animationend", () => ripple.remove());
+  }, { capture: true }); // captura: dispara mesmo se algum handler chamar stopPropagation() depois
+}
+
+/* =========================================================
+   16) BOTÃO MAGNÉTICO (hero CTA)
    ========================================================= */
 function initMagneticButton() {
   const btn = $(".hero__scroll");
@@ -808,7 +841,7 @@ function initMagneticButton() {
 }
 
 /* =========================================================
-   16) BOLA DE LUZ QUE SEGUE O CURSOR
+   17) BOLA DE LUZ QUE SEGUE O CURSOR
    ========================================================= */
 function initCursorGlow() {
   const glow = $("#cursorGlow");
@@ -870,6 +903,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initParticles();
   initCursorGlow();
   initMagneticButton();
+  initRipple();
   initCardSpotlight();
   initParallax();
 
