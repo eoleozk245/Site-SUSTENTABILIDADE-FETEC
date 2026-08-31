@@ -38,7 +38,9 @@
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer
           onerror="this.onerror=null;var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js';s.defer=true;document.head.appendChild(s);"></script>
 
-  <link rel="stylesheet" href="style.css" />
+  <!-- ?v= força o navegador a baixar a versão nova em vez de usar a do cache.
+       Ao alterar o CSS ou o JS, incremente o número nas duas tags. -->
+  <link rel="stylesheet" href="style.css?v=2" />
 </head>
 <body>
 
@@ -232,6 +234,6 @@
     </div>
   </div>
 
-  <script src="script.js" defer></script>
+  <script src="script.js?v=2" defer></script>
 </body>
 </html>
