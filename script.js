@@ -70,7 +70,7 @@ const SITES = [
     descricao: "Apresenta uma dinâmica interativa de quiz voltada para a conscientização da reciclagem de eletrônicos e resíduos do dia a dia.",
     categoria: "reciclagem",
     link: "https://ianfillype.github.io/ReciclaTec---Reciclagem-Inteligente-Sustentabilidade/",
-    imagem: null,
+    imagem: "imagens/recicla-tech.webp",
   },
   {
     id: "reciclagem-inteligente",
@@ -78,7 +78,7 @@ const SITES = [
     descricao: "Conta com uma seção de jogo dedicada para ensinar regras de coleta seletiva e reciclagem de forma prática.",
     categoria: "reciclagem",
     link: "https://cauaroberto.github.io/Reciclagem/",
-    imagem: null,
+    imagem: "imagens/reciclagem-inteligente.webp",
   },
   {
     id: "re-loop",
@@ -86,7 +86,7 @@ const SITES = [
     descricao: "Excelente abordagem conceitual sobre o ciclo de vida dos produtos e o retorno de materiais descartados à cadeia produtiva.",
     categoria: "reciclagem",
     link: "https://eloh017.github.io/Re-Loop/",
-    imagem: null,
+    imagem: "imagens/re-loop.webp",
   },
 
   // 2) Água e Vida Marinha
@@ -96,7 +96,7 @@ const SITES = [
     descricao: "Possui uma seção específica com jogo educativo focada na preservação e no uso inteligente da água.",
     categoria: "agua",
     link: "https://calopsitadomal20-hue.github.io/aquaeco/",
-    imagem: null,
+    imagem: "imagens/aquaeco.webp",
   },
   {
     id: "ecooceano",
@@ -104,7 +104,7 @@ const SITES = [
     descricao: "Jogo interativo focado na proteção dos oceanos e na remoção de poluentes dos ecossistemas marinhos.",
     categoria: "agua",
     link: "https://discordfds124-design.github.io/mar/",
-    imagem: null,
+    imagem: "imagens/ecooceano.webp",
   },
   {
     id: "mar-vivo",
@@ -112,7 +112,7 @@ const SITES = [
     descricao: "Inova ao unir sustentabilidade marítima com inteligência artificial para proteção da vida marinha.",
     categoria: "agua",
     link: "https://gabriemoraessilva.github.io/SITE-SUSTEMTABILIDADE-E-TECNOLOGIA-I.A-/",
-    imagem: null,
+    imagem: "imagens/mar-vivo.webp",
   },
 
   // 3) Cidades Inteligentes
@@ -122,7 +122,7 @@ const SITES = [
     descricao: "Interface moderna desenvolvida em web app que explora a construção e a gestão de cidades sustentáveis.",
     categoria: "cidades",
     link: "https://ecocity-os-core.lovable.app/",
-    imagem: null,
+    imagem: "imagens/ecocity.webp",
   },
   {
     id: "cidade-sustentavel",
@@ -130,7 +130,7 @@ const SITES = [
     descricao: "Apresenta conceitos urbanos inteligentes e iluminação/eficiência energética com um design responsivo e dinâmico.",
     categoria: "cidades",
     link: "https://bright-urban-glow.lovable.app/",
-    imagem: null,
+    imagem: "imagens/cidade-sustentavel.webp",
   },
   {
     id: "ecocity-nexus",
@@ -138,7 +138,7 @@ const SITES = [
     descricao: "Visão abrangente sobre a integração de tecnologias ecológicas em grandes centros urbanos.",
     categoria: "cidades",
     link: "https://otaviohss2000-cmyk.github.io/fetec-EcoCity/",
-    imagem: null,
+    imagem: "imagens/ecocity-nexus.webp",
   },
 
   // 4) Tecnologia Sustentável
@@ -148,7 +148,7 @@ const SITES = [
     descricao: "Incorpora um minijogo que desafia o usuário a tomar decisões ecológicas utilizando a tecnologia a seu favor.",
     categoria: "tecnologia",
     link: "https://danks0s.github.io/Site-ecologico/",
-    imagem: null,
+    imagem: "imagens/tecnologia-sustentavel.webp",
   },
   {
     id: "sustentabilidade-e-tecnologia",
@@ -156,7 +156,7 @@ const SITES = [
     descricao: "Combina conteúdo educativo sobre tecnologias limpas com uma área de jogo interativo para engajamento do público.",
     categoria: "tecnologia",
     link: "https://estevamg136ac.github.io/FETEC-Sustentabilidade-/",
-    imagem: null,
+    imagem: "imagens/sustentabilidade-e-tecnologia.webp",
   },
   {
     id: "tecnologia-natureza",
@@ -164,7 +164,7 @@ const SITES = [
     descricao: "Possui uma seção de quiz para testar os conhecimentos sobre o equilíbrio entre inovação tecnológica e preservação ambiental.",
     categoria: "tecnologia",
     link: "https://joaopedromunhoz010-ops.github.io/site-top/",
-    imagem: null,
+    imagem: "imagens/tecnologia-natureza.webp",
   },
 
   // 5) Agricultura Sustentável
@@ -174,7 +174,7 @@ const SITES = [
     descricao: "Foco em soluções tecnológicas para o agronegócio sustentável e preservação do solo.",
     categoria: "agro",
     link: "https://gabrieloolls.github.io/Site-FETEC/",
-    imagem: null,
+    imagem: "imagens/agro-verde.webp",
   },
   {
     id: "cultivacao",
@@ -182,7 +182,7 @@ const SITES = [
     descricao: "Design refinado com práticas e diretrizes para técnicas agrícolas limpas e eficientes.",
     categoria: "agro",
     link: "https://ddiasgabriela-design.github.io/agriculturaSustentavel/",
-    imagem: null,
+    imagem: "imagens/cultivacao.webp",
   },
 ];
 
