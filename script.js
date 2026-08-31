@@ -352,13 +352,39 @@ function refreshFavoritesUI() {
   }
 }
 
+/* pequena explosão de partículas ao favoritar */
+function spawnConfetti(originEl) {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const rect = originEl.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const colors = ["#22D3EE", "#F472B6", "#FBBF24", "#34D399", "#818CF8"];
+  const count = 10;
+
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement("span");
+    p.className = "confetti-particle";
+    const angle = (Math.PI * 2 * i) / count + Math.random() * 0.4;
+    const dist = 40 + Math.random() * 30;
+    p.style.setProperty("--dx", `${Math.cos(angle) * dist}px`);
+    p.style.setProperty("--dy", `${Math.sin(angle) * dist}px`);
+    p.style.background = colors[i % colors.length];
+    p.style.left = `${cx}px`;
+    p.style.top = `${cy}px`;
+    document.body.appendChild(p);
+    p.addEventListener("animationend", () => p.remove());
+  }
+}
+
 function initFavorites() {
   document.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-fav]");
     if (!btn) return;
     e.preventDefault();
     e.stopPropagation();
+    const wasActive = favorites.has(btn.dataset.fav);
     toggleFavorite(btn.dataset.fav);
+    if (!wasActive) spawnConfetti(btn);
   });
 
   $("#favoritesBtn").addEventListener("click", () => {
@@ -468,15 +494,25 @@ function initSearch() {
 function initScrollspy() {
   const links = $$(".nav__link");
   const mobLinks = $$(".mobile-menu__link");
+  const indicator = $("#navIndicator");
   const map = new Map();
   CATEGORIAS.forEach((cat) => {
     const el = $(`#${cat.id}`);
     if (el) map.set(el, cat.id);
   });
 
+  const moveIndicator = (id) => {
+    if (!indicator) return;
+    const link = links.find((l) => l.dataset.nav === id);
+    if (!link) return;
+    indicator.style.transform = `translateX(${link.offsetLeft - 4}px)`;
+    indicator.classList.add("is-active");
+  };
+
   const setActive = (id) => {
     links.forEach((l)   => l.classList.toggle("is-active", l.dataset.nav === id));
     mobLinks.forEach((l) => l.classList.toggle("is-active", l.getAttribute("href") === `#${id}`));
+    moveIndicator(id);
   };
 
   const observer = new IntersectionObserver((entries) => {
@@ -502,12 +538,14 @@ function initScrollspy() {
 /* =========================================================
    9) MODAL de detalhes
    ========================================================= */
-function openModal(siteId) {
+function openModal(siteId, originEl) {
   const site = SITES.find((s) => s.id === siteId);
   if (!site) return;
   const cat = catById(site.categoria);
 
   const modal = $("#modal");
+  const panel = $(".modal__panel", modal);
+
   const cover = $("#modalCover");
   cover.innerHTML = site.imagem
     ? `<img src="${escapeHtml(site.imagem)}" alt="Capa do ${escapeHtml(site.nome)}" />`
@@ -536,6 +574,23 @@ function openModal(siteId) {
   modal.hidden = false;
   modal.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
+  modal.classList.remove("is-open");
+
+  // origem do "zoom": centro do card clicado, para o modal parecer crescer a partir dele
+  if (originEl && panel) {
+    const cardRect  = originEl.getBoundingClientRect();
+    const panelRect = panel.getBoundingClientRect();
+    const originX = cardRect.left + cardRect.width / 2 - panelRect.left;
+    const originY = cardRect.top + cardRect.height / 2 - panelRect.top;
+    panel.style.setProperty("--origin-x", `${originX}px`);
+    panel.style.setProperty("--origin-y", `${originY}px`);
+  } else if (panel) {
+    panel.style.setProperty("--origin-x", "50%");
+    panel.style.setProperty("--origin-y", "50%");
+  }
+
+  // dispara a transição de zoom no próximo frame
+  requestAnimationFrame(() => requestAnimationFrame(() => modal.classList.add("is-open")));
 
   // re-renderizar ícones injetados
   if (window.lucide) window.lucide.createIcons();
@@ -544,9 +599,12 @@ function openModal(siteId) {
 
 function closeModal() {
   const modal = $("#modal");
-  modal.hidden = true;
-  modal.setAttribute("aria-hidden", "true");
+  modal.classList.remove("is-open");
   document.body.style.overflow = "";
+  setTimeout(() => {
+    modal.hidden = true;
+    modal.setAttribute("aria-hidden", "true");
+  }, 260);
 }
 
 function initModal() {
@@ -554,7 +612,7 @@ function initModal() {
     // abrir modal ao clicar num card (mas não se clicou no favorito ou no botão de acessar)
     const card = e.target.closest(".card");
     if (card && !e.target.closest("[data-fav]") && !e.target.closest("[data-visit]")) {
-      openModal(card.dataset.id);
+      openModal(card.dataset.id, card);
       return;
     }
     // fechar modal
@@ -682,7 +740,49 @@ function initParticles() {
 }
 
 /* =========================================================
-   14) BOTÃO MAGNÉTICO (hero CTA)
+   13) SPOTLIGHT NOS CARDS (segue o cursor)
+   ========================================================= */
+function initCardSpotlight() {
+  const container = $("#sectionsContainer");
+  if (!container) return;
+
+  container.addEventListener("mousemove", (e) => {
+    const card = e.target.closest(".card");
+    if (!card) return;
+    const rect = card.getBoundingClientRect();
+    card.style.setProperty("--mx", `${e.clientX - rect.left}px`);
+    card.style.setProperty("--my", `${e.clientY - rect.top}px`);
+  });
+}
+
+/* =========================================================
+   14) PARALLAX NOS BLOBS DE FUNDO
+   ========================================================= */
+function initParallax() {
+  const layers = $$(".parallax-layer");
+  if (!layers.length) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  let ticking = false;
+  const update = () => {
+    const y = window.scrollY;
+    layers.forEach((layer) => {
+      const speed = parseFloat(layer.dataset.parallax) || 0.1;
+      layer.style.transform = `translate3d(0, ${(y * speed).toFixed(1)}px, 0)`;
+    });
+    ticking = false;
+  };
+
+  window.addEventListener("scroll", () => {
+    if (!ticking) {
+      requestAnimationFrame(update);
+      ticking = true;
+    }
+  }, { passive: true });
+}
+
+/* =========================================================
+   15) BOTÃO MAGNÉTICO (hero CTA)
    ========================================================= */
 function initMagneticButton() {
   const btn = $(".hero__scroll");
@@ -708,7 +808,7 @@ function initMagneticButton() {
 }
 
 /* =========================================================
-   15) BOLA DE LUZ QUE SEGUE O CURSOR
+   16) BOLA DE LUZ QUE SEGUE O CURSOR
    ========================================================= */
 function initCursorGlow() {
   const glow = $("#cursorGlow");
@@ -770,6 +870,8 @@ document.addEventListener("DOMContentLoaded", () => {
   initParticles();
   initCursorGlow();
   initMagneticButton();
+  initCardSpotlight();
+  initParallax();
 
   // contador anima quando o hero está visível
   const heroObs = new IntersectionObserver((entries) => {

@@ -21,9 +21,9 @@
   <!-- Fundo animado (gradiente mesh + partículas) -->
   <div class="bg-layer" aria-hidden="true">
     <div class="bg-mesh"></div>
-    <div class="bg-blob bg-blob--1"></div>
-    <div class="bg-blob bg-blob--2"></div>
-    <div class="bg-blob bg-blob--3"></div>
+    <div class="parallax-layer" data-parallax="0.08"><div class="bg-blob bg-blob--1"></div></div>
+    <div class="parallax-layer" data-parallax="0.15"><div class="bg-blob bg-blob--2"></div></div>
+    <div class="parallax-layer" data-parallax="0.05"><div class="bg-blob bg-blob--3"></div></div>
     <canvas class="bg-particles" id="particles"></canvas>
   </div>
 
@@ -55,7 +55,8 @@
         <kbd class="search__kbd">/</kbd>
       </div>
 
-      <nav class="nav" aria-label="Categorias">
+      <nav class="nav" aria-label="Categorias" id="mainNav">
+        <span class="nav__indicator" id="navIndicator" aria-hidden="true"></span>
         <a href="#reciclagem" class="nav__link" data-nav="reciclagem" title="Reciclagem"><i data-lucide="recycle"></i></a>
         <a href="#agua" class="nav__link" data-nav="agua" title="Água e Oceano"><i data-lucide="waves"></i></a>
         <a href="#cidades" class="nav__link" data-nav="cidades" title="Cidades Inteligentes"><i data-lucide="building-2"></i></a>
