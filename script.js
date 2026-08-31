@@ -255,7 +255,7 @@ function renderSection(cat) {
             </div>
           </div>
         </div>
-        <span class="section__count">${total} projeto${total > 1 ? "s" : ""}</span>
+        <span class="section__count" data-total="${total}">${total} projeto${total !== 1 ? "s" : ""}</span>
       </div>
       <div class="grid" data-grid="${cat.id}">
         ${cards}
@@ -264,38 +264,59 @@ function renderSection(cat) {
   `;
 }
 
+/* fallback quando a imagem de capa não carrega: mostra o ícone da categoria */
+function handleCoverError(img, icone) {
+  const cover = img.closest(".card__cover");
+  if (!cover) return;
+  cover.classList.remove("is-loading");
+  cover.classList.add("card__cover--placeholder");
+  img.remove();
+  const icon = document.createElement("i");
+  icon.setAttribute("data-lucide", icone);
+  icon.className = "card__cover-icon";
+  cover.prepend(icon);
+  if (window.lucide) window.lucide.createIcons();
+}
+
 function renderCard(site, cat) {
+  // onerror: se a capa falhar, cai no ícone da categoria em vez de ficar
+  // com o skeleton girando para sempre
   const cover = site.imagem
-    ? `<img src="${escapeHtml(site.imagem)}" alt="Capa do ${escapeHtml(site.nome)}" loading="lazy"
-         onload="this.closest('.card__cover').classList.remove('is-loading')" />`
+    ? `<img src="${escapeHtml(site.imagem)}" alt="Capa do site ${escapeHtml(site.nome)}" loading="lazy" decoding="async"
+         onload="this.closest('.card__cover').classList.remove('is-loading')"
+         onerror="handleCoverError(this, '${escapeHtml(cat.icone)}')" />`
     : `<i data-lucide="${cat.icone}" class="card__cover-icon"></i>`;
 
   const coverClass = site.imagem ? "card__cover is-loading" : "card__cover card__cover--placeholder";
 
   return `
     <article class="card" data-id="${site.id}" data-cat="${cat.id}"
+             tabindex="0" role="button"
+             aria-label="Ver detalhes de ${escapeHtml(site.nome)}"
              data-search="${normalize(site.nome + " " + site.descricao + " " + cat.nome)}">
 
       <div class="${coverClass}">
         ${cover}
-        <button class="card__fav" data-fav="${site.id}" aria-label="Favoritar ${escapeHtml(site.nome)}">
-          <i data-lucide="heart"></i>
+        <button class="card__fav" data-fav="${site.id}" aria-pressed="false"
+                aria-label="Favoritar ${escapeHtml(site.nome)}">
+          <i data-lucide="heart" aria-hidden="true"></i>
         </button>
       </div>
 
       <div class="card__body">
         <span class="badge">
-          <i data-lucide="${cat.icone}"></i>
+          <i data-lucide="${cat.icone}" aria-hidden="true"></i>
           ${escapeHtml(cat.nome.split(" ")[0])}
         </span>
         <h3 class="card__title">${escapeHtml(site.nome)}</h3>
         <p class="card__desc">${escapeHtml(site.descricao)}</p>
         <div class="card__footer">
           <a class="btn btn--primary" href="${escapeHtml(site.link)}"
-             target="_blank" rel="noopener" data-visit="${site.id}"
+             target="_blank" rel="noopener noreferrer" data-visit="${site.id}"
+             aria-label="Acessar ${escapeHtml(site.nome)} (abre em nova aba)"
              onclick="event.stopPropagation()">
             Acessar
-            <i data-lucide="arrow-up-right"></i>
+            <i data-lucide="arrow-up-right" aria-hidden="true"></i>
           </a>
         </div>
       </div>
@@ -308,15 +329,35 @@ function renderCard(site, cat) {
    ========================================================= */
 function initTheme() {
   const saved = storage.get("theme", null);
-  const theme = saved || "dark"; // padrão: escuro
-  document.documentElement.setAttribute("data-theme", theme);
+  // na primeira visita segue a preferência do sistema; depois, a escolha salva
+  const prefersLight = window.matchMedia("(prefers-color-scheme: light)").matches;
+  const theme = saved || (prefersLight ? "light" : "dark");
+  applyTheme(theme);
 
-  $("#themeBtn").addEventListener("click", () => {
+  const btn = $("#themeBtn");
+  btn.addEventListener("click", () => {
     const current = document.documentElement.getAttribute("data-theme");
     const next = current === "dark" ? "light" : "dark";
-    document.documentElement.setAttribute("data-theme", next);
+    applyTheme(next);
     storage.set("theme", next);
   });
+
+  // se o usuário nunca escolheu manualmente, acompanha mudanças do sistema
+  window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", (e) => {
+    if (storage.get("theme", null)) return;
+    applyTheme(e.matches ? "light" : "dark");
+  });
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  const btn = $("#themeBtn");
+  if (btn) {
+    btn.setAttribute("aria-label", theme === "dark" ? "Ativar tema claro" : "Ativar tema escuro");
+  }
+  // mantém a cor da barra do navegador (mobile) em sintonia com o tema
+  const meta = $('meta[name="theme-color"]');
+  if (meta) meta.setAttribute("content", theme === "dark" ? "#050914" : "#E8F1FA");
 }
 
 /* =========================================================
@@ -336,7 +377,9 @@ function refreshFavoritesUI() {
   // atualizar botões nos cards
   $$('[data-fav]').forEach((btn) => {
     const id = btn.dataset.fav;
-    btn.classList.toggle("is-active", favorites.has(id));
+    const active = favorites.has(id);
+    btn.classList.toggle("is-active", active);
+    btn.setAttribute("aria-pressed", String(active));
   });
   // contador no header
   const count = favorites.size;
@@ -348,6 +391,7 @@ function refreshFavoritesUI() {
   if (modalFav && modalFav.dataset.id) {
     const active = favorites.has(modalFav.dataset.id);
     modalFav.classList.toggle("is-active", active);
+    modalFav.setAttribute("aria-pressed", String(active));
     modalFav.querySelector("span").textContent = active ? "Favoritado" : "Favoritar";
   }
 }
@@ -387,9 +431,12 @@ function initFavorites() {
     if (!wasActive) spawnConfetti(btn);
   });
 
-  $("#favoritesBtn").addEventListener("click", () => {
+  const favFilterBtn = $("#favoritesBtn");
+  favFilterBtn.setAttribute("aria-pressed", "false");
+  favFilterBtn.addEventListener("click", () => {
     // filtro rápido: mostra só favoritos, ou desativa
-    const active = $("#favoritesBtn").classList.toggle("is-filtering");
+    const active = favFilterBtn.classList.toggle("is-filtering");
+    favFilterBtn.setAttribute("aria-pressed", String(active));
     filterCards({ favoritesOnly: active, query: $("#searchInput").value });
   });
 
@@ -407,13 +454,35 @@ function pushRecent(id) {
   const filtered = list.filter((x) => x !== id);
   filtered.unshift(id);
   storage.set(RECENT_KEY, filtered.slice(0, RECENT_MAX));
+  refreshRecentUI();
+}
+
+/* marca visualmente os projetos que você já abriu */
+function refreshRecentUI() {
+  const recent = new Set(storage.get(RECENT_KEY, []));
+  $$(".card").forEach((card) => {
+    const visited = recent.has(card.dataset.id);
+    card.classList.toggle("is-visited", visited);
+    let tag = $(".card__visited", card);
+    if (visited && !tag) {
+      tag = document.createElement("span");
+      tag.className = "card__visited";
+      tag.textContent = "Visitado";
+      $(".card__cover", card)?.appendChild(tag);
+    } else if (!visited && tag) {
+      tag.remove();
+    }
+  });
 }
 
 function initRecent() {
+  // captura: o link "Acessar" chama stopPropagation() para não abrir o modal,
+  // o que impedia este listener de rodar na fase de bolha
   document.addEventListener("click", (e) => {
     const link = e.target.closest("[data-visit]");
     if (link) pushRecent(link.dataset.visit);
-  });
+  }, { capture: true });
+  refreshRecentUI();
 }
 
 /* =========================================================
@@ -452,6 +521,14 @@ function filterCards({ query = "", favoritesOnly = false } = {}) {
       animateCardVisibility(card, show);
       if (show) visibleInSection++;
     });
+
+    // o contador da seção acompanha o filtro ativo
+    const countEl = $(".section__count", section);
+    if (countEl) {
+      const filtering = !!q || favoritesOnly;
+      const shown = filtering ? visibleInSection : Number(countEl.dataset.total);
+      countEl.textContent = `${shown} projeto${shown !== 1 ? "s" : ""}`;
+    }
 
     section.classList.toggle("is-hidden", visibleInSection === 0);
     totalVisible += visibleInSection;
@@ -554,6 +631,9 @@ function initScrollspy() {
 /* =========================================================
    9) MODAL de detalhes
    ========================================================= */
+/* guarda o elemento focado antes de abrir o modal, para restaurar depois */
+let lastFocusedElement = null;
+
 function openModal(siteId, originEl) {
   const site = SITES.find((s) => s.id === siteId);
   if (!site) return;
@@ -587,6 +667,9 @@ function openModal(siteId, originEl) {
   favBtn.dataset.fav = site.id;
   favBtn.dataset.id  = site.id;
 
+  // guarda quem abriu o modal, para devolver o foco ao fechar
+  lastFocusedElement = originEl || document.activeElement;
+
   modal.hidden = false;
   modal.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
@@ -611,16 +694,49 @@ function openModal(siteId, originEl) {
   // re-renderizar ícones injetados
   if (window.lucide) window.lucide.createIcons();
   refreshFavoritesUI();
+
+  // move o foco para dentro do modal (acessibilidade por teclado)
+  $(".modal__close", modal).focus();
 }
 
 function closeModal() {
   const modal = $("#modal");
+  if (modal.hidden) return;
   modal.classList.remove("is-open");
   document.body.style.overflow = "";
   setTimeout(() => {
     modal.hidden = true;
     modal.setAttribute("aria-hidden", "true");
   }, 260);
+
+  // devolve o foco para o card que abriu o modal
+  if (lastFocusedElement && document.contains(lastFocusedElement)) {
+    lastFocusedElement.focus();
+  }
+  lastFocusedElement = null;
+}
+
+/* mantém o Tab circulando dentro do modal enquanto ele estiver aberto */
+function trapFocus(e) {
+  const modal = $("#modal");
+  if (modal.hidden || e.key !== "Tab") return;
+
+  const focusables = $$(
+    'a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])',
+    modal
+  ).filter((el) => el.offsetParent !== null);
+  if (!focusables.length) return;
+
+  const first = focusables[0];
+  const last  = focusables[focusables.length - 1];
+
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault();
+    first.focus();
+  }
 }
 
 function initModal() {
@@ -635,17 +751,42 @@ function initModal() {
     if (e.target.closest("[data-close]")) closeModal();
   });
 
+  // abrir o modal pelo teclado (Enter ou Espaço no card focado)
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const card = e.target.closest?.(".card");
+    if (!card || e.target !== card) return; // ignora Enter no botão/link de dentro
+    e.preventDefault();
+    openModal(card.dataset.id, card);
+  });
+
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !$("#modal").hidden) closeModal();
+    trapFocus(e);
   });
 }
 
 /* =========================================================
   10) CONTADOR ANIMADO + REVEAL ON SCROLL
    ========================================================= */
+/* preenche os contadores do hero a partir dos dados reais (nunca desatualiza) */
+function syncCounters() {
+  const fontes = {
+    sites: SITES.length,
+    categorias: CATEGORIAS.length,
+  };
+  $$(".stat__num").forEach((el) => {
+    const fonte = el.dataset.countFrom;
+    if (fonte && fonte in fontes) el.dataset.count = fontes[fonte];
+    // já mostra o valor final: se a animação não rodar, o número certo aparece
+    el.textContent = el.dataset.count ?? el.textContent;
+  });
+}
+
 function animateCounters() {
   $$(".stat__num").forEach((el) => {
     const target = parseInt(el.dataset.count, 10);
+    if (Number.isNaN(target)) return;
     const duration = 1200;
     const start = performance.now();
     const step = (now) => {
@@ -701,18 +842,34 @@ function initHeader() {
 
   const menuBtn = $("#menuBtn");
   const menu    = $("#mobileMenu");
-  menuBtn.addEventListener("click", () => {
-    const open = menu.hidden;
+
+  const setMenu = (open) => {
     menu.hidden = !open;
     menuBtn.setAttribute("aria-expanded", String(open));
-  });
+    menuBtn.setAttribute("aria-label", open ? "Fechar menu" : "Abrir menu");
+  };
+
+  menuBtn.addEventListener("click", () => setMenu(menu.hidden));
+
   // fechar menu ao clicar num link
   $$(".mobile-menu__link").forEach((l) =>
-    l.addEventListener("click", () => {
-      menu.hidden = true;
-      menuBtn.setAttribute("aria-expanded", "false");
-    })
+    l.addEventListener("click", () => setMenu(false))
   );
+
+  // fechar ao clicar fora do menu
+  document.addEventListener("click", (e) => {
+    if (menu.hidden) return;
+    if (e.target.closest("#mobileMenu") || e.target.closest("#menuBtn")) return;
+    setMenu(false);
+  });
+
+  // fechar com Escape (e devolver o foco ao botão)
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !menu.hidden) {
+      setMenu(false);
+      menuBtn.focus();
+    }
+  });
 }
 
 /* botão flutuante "voltar ao topo" */
@@ -799,14 +956,27 @@ function initParticles() {
 function initCardSpotlight() {
   const container = $("#sectionsContainer");
   if (!container) return;
+  if (window.matchMedia("(hover: none), (pointer: coarse)").matches) return;
 
+  let pending = null;
+  let scheduled = false;
+
+  // agrupa as atualizações num único frame para não escrever estilo a cada mousemove
   container.addEventListener("mousemove", (e) => {
     const card = e.target.closest(".card");
     if (!card) return;
-    const rect = card.getBoundingClientRect();
-    card.style.setProperty("--mx", `${e.clientX - rect.left}px`);
-    card.style.setProperty("--my", `${e.clientY - rect.top}px`);
-  });
+    pending = { card, x: e.clientX, y: e.clientY };
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(() => {
+      scheduled = false;
+      if (!pending) return;
+      const rect = pending.card.getBoundingClientRect();
+      pending.card.style.setProperty("--mx", `${pending.x - rect.left}px`);
+      pending.card.style.setProperty("--my", `${pending.y - rect.top}px`);
+      pending = null;
+    });
+  }, { passive: true });
 }
 
 /* =========================================================
@@ -935,6 +1105,7 @@ function initCursorGlow() {
    ========================================================= */
 document.addEventListener("DOMContentLoaded", () => {
   initTheme();
+  syncCounters();
   renderAll();
 
   // renderizar ícones lucide após primeiro render
