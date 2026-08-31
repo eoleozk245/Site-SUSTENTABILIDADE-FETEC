@@ -715,6 +715,32 @@ function initHeader() {
   );
 }
 
+/* botão flutuante "voltar ao topo" */
+function initBackToTop() {
+  const btn = $("#backToTop");
+  if (!btn) return;
+  let shown = false;
+
+  const onScroll = () => {
+    const shouldShow = window.scrollY > window.innerHeight * 0.8;
+    if (shouldShow && !shown) {
+      shown = true;
+      btn.hidden = false;
+      requestAnimationFrame(() => btn.classList.add("is-visible"));
+    } else if (!shouldShow && shown) {
+      shown = false;
+      btn.classList.remove("is-visible");
+      setTimeout(() => { if (!shown) btn.hidden = true; }, 320);
+    }
+  };
+  onScroll();
+  window.addEventListener("scroll", onScroll, { passive: true });
+
+  btn.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+}
+
 /* =========================================================
   12) PARTÍCULAS DE FUNDO (canvas leve)
    ========================================================= */
@@ -922,6 +948,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initScrollspy();
   initModal();
   initHeader();
+  initBackToTop();
   initReveal();
   initParticles();
   initCursorGlow();
