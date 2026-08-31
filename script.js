@@ -266,10 +266,11 @@ function renderSection(cat) {
 
 function renderCard(site, cat) {
   const cover = site.imagem
-    ? `<img src="${escapeHtml(site.imagem)}" alt="Capa do ${escapeHtml(site.nome)}" loading="lazy" />`
+    ? `<img src="${escapeHtml(site.imagem)}" alt="Capa do ${escapeHtml(site.nome)}" loading="lazy"
+         onload="this.closest('.card__cover').classList.remove('is-loading')" />`
     : `<i data-lucide="${cat.icone}" class="card__cover-icon"></i>`;
 
-  const coverClass = site.imagem ? "card__cover" : "card__cover card__cover--placeholder";
+  const coverClass = site.imagem ? "card__cover is-loading" : "card__cover card__cover--placeholder";
 
   return `
     <article class="card" data-id="${site.id}" data-cat="${cat.id}"
@@ -577,7 +578,12 @@ function animateCounters() {
       const t = Math.min(1, (now - start) / duration);
       const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
       el.textContent = Math.round(target * eased);
-      if (t < 1) requestAnimationFrame(step);
+      if (t < 1) {
+        requestAnimationFrame(step);
+      } else {
+        el.classList.add("is-pulsing");
+        el.addEventListener("animationend", () => el.classList.remove("is-pulsing"), { once: true });
+      }
     };
     requestAnimationFrame(step);
   });
@@ -676,7 +682,68 @@ function initParticles() {
 }
 
 /* =========================================================
-   13) BOLA DE LUZ QUE SEGUE O CURSOR
+   13) TILT 3D NOS CARDS (segue o cursor)
+   ========================================================= */
+function initCardTilt() {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (window.matchMedia("(hover: none), (pointer: coarse)").matches) return;
+
+  const container = $("#sectionsContainer");
+  if (!container) return;
+
+  const MAX_TILT = 8; // graus
+
+  container.addEventListener("mousemove", (e) => {
+    const card = e.target.closest(".card");
+    if (!card) return;
+    const rect = card.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width;  // 0..1
+    const py = (e.clientY - rect.top) / rect.height;  // 0..1
+    const rotateY = (px - 0.5) * MAX_TILT * 2;
+    const rotateX = (0.5 - py) * MAX_TILT * 2;
+
+    card.classList.add("is-tilting");
+    card.style.transform =
+      `perspective(900px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-6px) scale(1.015)`;
+  });
+
+  container.addEventListener("mouseout", (e) => {
+    const card = e.target.closest(".card");
+    if (!card) return;
+    if (card.contains(e.relatedTarget)) return;
+    card.classList.remove("is-tilting");
+    card.style.transform = "";
+  });
+}
+
+/* =========================================================
+   14) BOTÃO MAGNÉTICO (hero CTA)
+   ========================================================= */
+function initMagneticButton() {
+  const btn = $(".hero__scroll");
+  if (!btn) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (window.matchMedia("(hover: none), (pointer: coarse)").matches) return;
+
+  const STRENGTH = 0.35;
+
+  btn.addEventListener("mouseenter", () => btn.classList.add("is-magnetic"));
+
+  btn.addEventListener("mousemove", (e) => {
+    const rect = btn.getBoundingClientRect();
+    const offsetX = (e.clientX - rect.left - rect.width / 2) * STRENGTH;
+    const offsetY = (e.clientY - rect.top - rect.height / 2) * STRENGTH;
+    btn.style.transform = `translate(${offsetX.toFixed(1)}px, ${offsetY.toFixed(1)}px)`;
+  });
+
+  btn.addEventListener("mouseleave", () => {
+    btn.classList.remove("is-magnetic");
+    btn.style.transform = "";
+  });
+}
+
+/* =========================================================
+   15) BOLA DE LUZ QUE SEGUE O CURSOR
    ========================================================= */
 function initCursorGlow() {
   const glow = $("#cursorGlow");
@@ -737,6 +804,8 @@ document.addEventListener("DOMContentLoaded", () => {
   initReveal();
   initParticles();
   initCursorGlow();
+  initCardTilt();
+  initMagneticButton();
 
   // contador anima quando o hero está visível
   const heroObs = new IntersectionObserver((entries) => {

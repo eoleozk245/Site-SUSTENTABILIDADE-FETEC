@@ -570,6 +570,15 @@ svg[data-lucide], .lucide {
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
   line-height: 1;
+  display: inline-block;
+}
+.stat__num.is-pulsing {
+  animation: statPulse 420ms ease;
+}
+@keyframes statPulse {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.18); color: var(--accent-strong); }
+  100% { transform: scale(1); }
 }
 
 .stat__label {
@@ -606,6 +615,9 @@ svg[data-lucide], .lucide {
   color: var(--accent);
   border-color: var(--accent);
   transform: translateY(2px);
+}
+.hero__scroll.is-magnetic {
+  transition: transform 150ms ease-out, color var(--transition), border-color var(--transition);
 }
 .hero__scroll svg {
   width: 16px; height: 16px;
@@ -695,6 +707,11 @@ svg[data-lucide], .lucide {
   transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
   cursor: pointer;
   isolation: isolate;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.card.is-tilting {
+  transition: box-shadow var(--transition), border-color var(--transition);
 }
 
 /* borda animada (brilho no hover) */
@@ -739,10 +756,28 @@ svg[data-lucide], .lucide {
   overflow: hidden;
   background: linear-gradient(135deg, var(--cat-color, var(--accent)), var(--bg-elev-2));
 }
+.card__cover.is-loading {
+  background: linear-gradient(100deg,
+    var(--bg-elev) 30%,
+    var(--bg-elev-2) 50%,
+    var(--bg-elev) 70%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.3s ease-in-out infinite;
+}
+@keyframes skeletonShimmer {
+  0%   { background-position: 150% 0; }
+  100% { background-position: -50% 0; }
+}
 .card__cover img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  opacity: 1;
+  transition: opacity 400ms ease, transform 800ms ease;
+}
+.card__cover.is-loading img {
+  opacity: 0;
   transition: transform 800ms ease;
 }
 .card:hover .card__cover img { transform: scale(1.06); }
