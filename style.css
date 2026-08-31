@@ -662,13 +662,14 @@ svg[data-lucide], .lucide {
 .hero__title {
   font-family: var(--font-display);
   font-weight: 700;
-  /* mínimo menor + quebra segura: "Sustentabilidade" é longa e vazava em telas de 375px */
+  /* mínimo menor porque "Sustentabilidade" é longa e vazava em telas de 375px.
+     Sem hyphens: o navegador hifenizava "Tecnolo-gia" em vez de quebrar entre
+     as palavras. A quebra deve acontecer só entre palavras. */
   font-size: clamp(1.9rem, 7.5vw, 5.5rem);
   line-height: 1.05;
   letter-spacing: -0.035em;
   margin-bottom: 28px;
-  overflow-wrap: break-word;
-  hyphens: auto;
+  hyphens: manual;
   animation: fadeUp 1000ms var(--ease-apple) 100ms both;
 }
 
