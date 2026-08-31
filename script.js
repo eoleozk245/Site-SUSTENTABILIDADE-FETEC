@@ -419,6 +419,22 @@ function initRecent() {
 /* =========================================================
    7) BUSCA EM TEMPO REAL
    ========================================================= */
+/* transição suave ao mostrar/esconder um card no filtro */
+function animateCardVisibility(card, show) {
+  if (show) {
+    if (!card.classList.contains("is-hidden") && !card.classList.contains("is-filtering-out")) return;
+    clearTimeout(card._filterTimeout);
+    card.classList.remove("is-hidden");
+    // força reflow antes de remover a classe de saída, para o navegador animar a entrada
+    requestAnimationFrame(() => requestAnimationFrame(() => card.classList.remove("is-filtering-out")));
+  } else {
+    if (card.classList.contains("is-hidden")) return;
+    card.classList.add("is-filtering-out");
+    clearTimeout(card._filterTimeout);
+    card._filterTimeout = setTimeout(() => card.classList.add("is-hidden"), 260);
+  }
+}
+
 function filterCards({ query = "", favoritesOnly = false } = {}) {
   const q = normalize(query.trim());
   let totalVisible = 0;
@@ -433,7 +449,7 @@ function filterCards({ query = "", favoritesOnly = false } = {}) {
       const matchesQuery = !q || card.dataset.search.includes(q);
       const matchesFav   = !favoritesOnly || favorites.has(card.dataset.id);
       const show = matchesQuery && matchesFav;
-      card.classList.toggle("is-hidden", !show);
+      animateCardVisibility(card, show);
       if (show) visibleInSection++;
     });
 
@@ -845,6 +861,7 @@ function initMagneticButton() {
    ========================================================= */
 function initCursorGlow() {
   const glow = $("#cursorGlow");
+  const dot  = $("#cursorDot");
   if (!glow) return;
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   if (window.matchMedia("(hover: none), (pointer: coarse)").matches) return;
@@ -862,21 +879,27 @@ function initCursorGlow() {
     raf = requestAnimationFrame(tick);
   };
 
+  const HOVER_SELECTOR = "a, button, .card, [role='button'], input";
+
   window.addEventListener("mousemove", (e) => {
     targetX = e.clientX;
     targetY = e.clientY;
+    if (dot) dot.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
     if (!active) {
       active = true;
       currentX = targetX;
       currentY = targetY;
       glow.classList.add("is-active");
+      if (dot) dot.classList.add("is-active");
       raf = requestAnimationFrame(tick);
     }
+    if (dot) dot.classList.toggle("is-hovering", !!e.target.closest(HOVER_SELECTOR));
   }, { passive: true });
 
   window.addEventListener("mouseleave", () => {
     active = false;
     glow.classList.remove("is-active");
+    if (dot) dot.classList.remove("is-active");
     if (raf) cancelAnimationFrame(raf);
   });
 }

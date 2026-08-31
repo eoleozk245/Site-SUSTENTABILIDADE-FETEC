@@ -272,6 +272,37 @@ svg[data-lucide], .lucide {
   .cursor-glow { display: none; }
 }
 
+/* ponto de cursor customizado — cresce sobre elementos interativos */
+.cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: var(--accent);
+  pointer-events: none;
+  z-index: 300;
+  opacity: 0;
+  transition: opacity 250ms ease, width 220ms var(--ease-apple), height 220ms var(--ease-apple),
+              margin 220ms var(--ease-apple), background 220ms ease;
+  transform: translate3d(-999px, -999px, 0);
+  will-change: transform;
+}
+.cursor-dot.is-active { opacity: 1; }
+.cursor-dot.is-hovering {
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  background: transparent;
+  border: 2px solid var(--accent);
+}
+
+@media (hover: none), (pointer: coarse) {
+  .cursor-dot { display: none; }
+}
+
 /* 4) HEADER ------------------------------------------------ */
 .header {
   position: sticky;
@@ -296,6 +327,8 @@ svg[data-lucide], .lucide {
   backdrop-filter: blur(20px) saturate(140%);
   -webkit-backdrop-filter: blur(20px) saturate(140%);
   box-shadow: 0 10px 30px -15px rgba(0, 0, 0, 0.3);
+  transition: background 400ms var(--ease-apple), border-color 400ms var(--ease-apple),
+              box-shadow 400ms var(--ease-apple);
 }
 
 .brand {
@@ -408,6 +441,16 @@ svg[data-lucide], .lucide {
 }
 .nav__link:hover {
   color: var(--accent);
+}
+.nav__link:hover svg,
+.nav__link:hover [data-lucide] {
+  animation: navIconBounce 500ms var(--ease-out-back);
+}
+@keyframes navIconBounce {
+  0%   { transform: translateY(0) scale(1); }
+  30%  { transform: translateY(-4px) scale(1.15); }
+  60%  { transform: translateY(1px) scale(0.95); }
+  100% { transform: translateY(0) scale(1); }
 }
 .nav__link.is-active {
   color: white;
@@ -1057,6 +1100,13 @@ svg[data-lucide], .lucide {
 
 /* Seção escondida na busca */
 .section.is-hidden { display: none; }
+.card.is-filtering-out {
+  opacity: 0;
+  transform: scale(0.85);
+  filter: blur(4px);
+  transition: opacity 240ms var(--ease-apple), transform 240ms var(--ease-apple), filter 240ms var(--ease-apple);
+  pointer-events: none;
+}
 .card.is-hidden { display: none; }
 
 /* 8) MODAL ------------------------------------------------ */
