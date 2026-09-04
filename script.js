@@ -1056,22 +1056,53 @@ function initMagneticButton() {
    17) BOLA DE LUZ QUE SEGUE O CURSOR
    ========================================================= */
 function initCursorGlow() {
-  const glow = $("#cursorGlow");
+  const halo = $("#cursorGlow");
+  const core = $("#cursorGlowCore");
   const dot  = $("#cursorDot");
-  if (!glow) return;
+  if (!halo) return;
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   if (window.matchMedia("(hover: none), (pointer: coarse)").matches) return;
 
   let targetX = 0, targetY = 0;
-  let currentX = 0, currentY = 0;
   let active = false;
   let raf = null;
 
+  // cada camada tem sua própria inércia: o halo espalhado demora mais a
+  // acompanhar que o núcleo, o que dá volume à luz em vez de um disco chapado
+  const camadas = [
+    { el: halo, x: 0, y: 0, atracao: 0.055, escala: 1 },
+    { el: core, x: 0, y: 0, atracao: 0.13,  escala: 1 },
+  ].filter((c) => c.el);
+
+  let velocidadeSuave = 0;
+
   const tick = () => {
-    // suaviza o movimento (lerp) para um rastro suave
-    currentX += (targetX - currentX) * 0.18;
-    currentY += (targetY - currentY) * 0.18;
-    glow.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+    let deslocamento = 0;
+
+    camadas.forEach((c) => {
+      const dx = targetX - c.x;
+      const dy = targetY - c.y;
+      c.x += dx * c.atracao;
+      c.y += dy * c.atracao;
+      deslocamento = Math.max(deslocamento, Math.hypot(dx, dy));
+    });
+
+    // a velocidade entra e sai suavemente, para a luz nunca "pular" de tamanho
+    velocidadeSuave += (Math.min(deslocamento, 220) - velocidadeSuave) * 0.08;
+
+    camadas.forEach((c) => {
+      // em movimento a luz se espalha e enfraquece; parada, ela se recolhe
+      // e fica mais densa — é assim que uma fonte de luz real se comporta
+      const espalhar = 1 + (velocidadeSuave / 220) * 0.22 * c.escala;
+      const alvo = c.el === halo ? espalhar : 1 + (espalhar - 1) * 0.5;
+      c.el.style.transform =
+        `translate3d(${c.x.toFixed(2)}px, ${c.y.toFixed(2)}px, 0) scale(${alvo.toFixed(3)})`;
+    });
+
+    // a intensidade não é mexida aqui de propósito: mexer em opacity a cada
+    // frame anularia a transição de entrada/saída. Espalhar a mesma luz numa
+    // área maior já a enfraquece sozinho, que é o que acontece de verdade.
+
     raf = requestAnimationFrame(tick);
   };
 
@@ -1083,9 +1114,9 @@ function initCursorGlow() {
     if (dot) dot.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
     if (!active) {
       active = true;
-      currentX = targetX;
-      currentY = targetY;
-      glow.classList.add("is-active");
+      // nasce já na posição do cursor, sem varrer a tela desde o canto
+      camadas.forEach((c) => { c.x = targetX; c.y = targetY; });
+      camadas.forEach((c) => c.el.classList.add("is-active"));
       if (dot) dot.classList.add("is-active");
       raf = requestAnimationFrame(tick);
     }
@@ -1094,7 +1125,7 @@ function initCursorGlow() {
 
   window.addEventListener("mouseleave", () => {
     active = false;
-    glow.classList.remove("is-active");
+    camadas.forEach((c) => c.el.classList.remove("is-active"));
     if (dot) dot.classList.remove("is-active");
     if (raf) cancelAnimationFrame(raf);
   });

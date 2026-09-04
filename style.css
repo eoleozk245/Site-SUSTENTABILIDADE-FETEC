@@ -16,6 +16,17 @@
   --accent-soft:     rgba(34, 211, 238, 0.16);
   --accent-glow:     rgba(34, 211, 238, 0.45);
 
+  /* paradas da bola de luz: a intensidade cai rápido perto do centro e devagar
+     nas bordas, imitando a dispersão real da luz (um degradê de duas paradas
+     deixa um anel visível). O núcleo é mais branco, como uma fonte de luz real. */
+  --glow-core:  rgba(186, 245, 255, 0.20);
+  --glow-1:     rgba(34, 211, 238, 0.135);
+  --glow-2:     rgba(34, 211, 238, 0.080);
+  --glow-3:     rgba(34, 211, 238, 0.042);
+  --glow-4:     rgba(34, 211, 238, 0.018);
+  --glow-5:     rgba(34, 211, 238, 0.006);
+  --glow-blend: screen;
+
   --text:            #E6F0FF;
   --text-dim:        #93A3C4;
   --text-muted:      #5B6B8C;
@@ -46,6 +57,16 @@
   --accent-strong:   #0E7490;
   --accent-soft:     rgba(8, 145, 178, 0.12);
   --accent-glow:     rgba(8, 145, 178, 0.30);
+
+  /* no tema claro o "screen" clareia até sumir no fundo branco; aqui a luz
+     age tingindo a superfície (multiply), como luz atravessando vidro colorido */
+  --glow-core:  rgba(125, 211, 252, 0.16);
+  --glow-1:     rgba(8, 145, 178, 0.080);
+  --glow-2:     rgba(8, 145, 178, 0.052);
+  --glow-3:     rgba(8, 145, 178, 0.028);
+  --glow-4:     rgba(8, 145, 178, 0.012);
+  --glow-5:     rgba(8, 145, 178, 0.004);
+  --glow-blend: multiply;
 
   --text:            #0B1E3E;
   --text-dim:        #475569;
@@ -318,23 +339,51 @@ svg[data-lucide], .lucide {
 .back-to-top:active { transform: scale(0.9); }
 
 /* bola de luz suave que segue o cursor */
+/* Halo externo: largo, difuso e com bastante inércia — é a luz espalhada.
+   As várias paradas do degradê fazem a intensidade cair rápido perto do centro
+   e devagar nas bordas; o blur remove o serrilhado e a borda do círculo. */
 .cursor-glow {
   position: fixed;
   top: 0;
   left: 0;
-  width: 380px;
-  height: 380px;
-  margin: -190px 0 0 -190px;
+  width: 560px;
+  height: 560px;
+  margin: -280px 0 0 -280px;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
-  mix-blend-mode: screen;
+  background: radial-gradient(circle closest-side,
+    var(--glow-1)  0%,
+    var(--glow-2)  16%,
+    var(--glow-3)  32%,
+    var(--glow-4)  50%,
+    var(--glow-5)  70%,
+    transparent   100%);
+  /* desfoque pequeno de propósito: o degradê acima já chega a zero sozinho,
+     então o blur serve só para diluir as faixas de cor. Medindo, valores altos
+     custavam ~26% de tempo de frame sem melhorar a borda. */
+  filter: blur(10px);
+  mix-blend-mode: var(--glow-blend);
   pointer-events: none;
   z-index: 5;
   opacity: 0;
-  transition: opacity 300ms ease;
+  transition: opacity 600ms var(--ease-apple);
   transform: translate3d(-999px, -999px, 0);
   will-change: transform;
 }
+
+/* Núcleo: menor, mais quente e mais rápido — é a fonte da luz.
+   Acompanhar o cursor mais de perto que o halo dá sensação de profundidade. */
+.cursor-glow--core {
+  width: 240px;
+  height: 240px;
+  margin: -120px 0 0 -120px;
+  background: radial-gradient(circle closest-side,
+    var(--glow-core) 0%,
+    var(--glow-1)    28%,
+    var(--glow-3)    58%,
+    transparent     100%);
+  filter: blur(6px);
+}
+
 .cursor-glow.is-active { opacity: 1; }
 
 @media (hover: none), (pointer: coarse) {
